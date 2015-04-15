@@ -70,3 +70,8 @@ clean:
 	find . -name .DS_Store -exec rm {} \;
 	find . -name ._* -exec rm {} \;
 	rm -f *.o *.so core samples/testsocket
+
+mingw: lsocket.dll
+
+lsocket.dll : lsocket.c win_compat.c
+	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -L/usr/local/bin -llua53

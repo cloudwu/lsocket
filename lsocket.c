@@ -9,10 +9,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <string.h>
+
+#ifdef _WIN32
+
+#include "win_compat.h"
+
+#else
+
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -23,6 +30,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <ifaddrs.h>
+
+#define init_socketlib(L)
+
+#endif
 
 #ifndef IPV6_ADD_MEMBERSHIP
 	#define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
@@ -1124,6 +1135,7 @@ static int _table2fd_set(lua_State *L, int idx, fd_set *s)
 	while (lsocket_islSocket(L, -1)) {
 		lSocket *sock = lsocket_checklSocket(L, -1);
 		if (sock->sockfd >= 0) {
+			// todo: check FD_SETSIZE
 			FD_SET(sock->sockfd, s);
 			if (sock->sockfd > maxfd) maxfd = sock->sockfd;
 		}
@@ -1357,6 +1369,10 @@ static int lsocket_resolve(lua_State *L)
  */
 static int lsocket_getinterfaces(lua_State *L)
 {
+#ifdef _WIN32
+	// todo use GetAdaptersAddresses instead
+	return luaL_error(L, "Not implement");
+#else
 	struct ifaddrs *ifa;
 	char buf[SOCKADDR_BUFSIZ];
 	const char *s;
@@ -1395,6 +1411,7 @@ static int lsocket_getinterfaces(lua_State *L)
 
 	freeifaddrs(ifa);
 	return 1;
+#endif
 }
 
 /* Function list
@@ -1425,6 +1442,7 @@ static int lsocket_ignore(lua_State *L)
  */
 int luaopen_lsocket(lua_State *L)
 {
+	init_socketlib(L);
 	luaL_newlib(L, lsocket);
 
 	/* add constants */
