@@ -999,8 +999,9 @@ static int lsocket_sock_send(lua_State *L)
 			lua_pushboolean(L, 0);
 		else
 			return lsocket_error(L, strerror(errno));
+	} else {
+		lua_pushinteger(L, nwr);
 	}
-	lua_pushinteger(L, nwr);
 	return 1;
 }
 
@@ -1059,8 +1060,9 @@ static int lsocket_sock_sendto(lua_State *L)
 			lua_pushboolean(L, 0);
 		else
 			return lsocket_error(L, strerror(errno));
+	} else {
+		lua_pushinteger(L, nwr);
 	}
-	lua_pushinteger(L, nwr);
 	return 1;
 }
 
