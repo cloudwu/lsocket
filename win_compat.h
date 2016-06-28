@@ -37,7 +37,7 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 
 typedef u_short sa_family_t;
 
-// Windows doesn'y support AF_UNIX, this structure is only for avoiding compile error
+// Windows doesn't support AF_UNIX, this structure is only for avoiding compile error
 #define UNIX_PATH_MAX    108
 
 struct sockaddr_un {
