@@ -5,6 +5,9 @@
  * Gunnar Zötl <gz@tset.de>, 2013
  * Released under MIT/X11 license. See file LICENSE for details.
  */
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0502
+#endif
 
 #include <stdlib.h>
 #include <unistd.h>
