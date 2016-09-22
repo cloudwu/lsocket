@@ -11,10 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
-
+#if (defined _WIN32 ) || (defined _WIN64)
 #include "win_compat.h"
-
 #else
 
 #include <errno.h>
