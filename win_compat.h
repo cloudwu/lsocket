@@ -1,6 +1,7 @@
 #ifndef WINDOWS_COMPAT_H
 #define WINDOWS_COMPAT_H
 
+#include <winsock2.h>
 #include <windows.h>
 #if _WIN32_WINNT < 0x0502
 #undef _WIN32_WINNT
@@ -8,7 +9,6 @@
 #endif
 
 
-#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdint.h>
 #include <lua.h>

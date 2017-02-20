@@ -875,26 +875,32 @@ static int lsocket_sock_accept(lua_State *L)
  */
 static int lsocket_sock_recv(lua_State *L)
 {
+	char tmp[READER_BUFSIZ];
+	char *buf = tmp;
 	lSocket *sock = lsocket_checklSocket(L, 1);
 
 	uint32_t howmuch = luaL_optnumber(L, 2, READER_BUFSIZ);
 	if (lua_tonumber(L, 2) > UINT_MAX)
 		return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
 	
-	char *buf = malloc(howmuch);
+	if (howmuch > READER_BUFSIZ)
+		buf = malloc(howmuch);
 	int nrd = recv(sock->sockfd, buf, howmuch, 0);
 	if (nrd < 0) {
-		free(buf);
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			lua_pushboolean(L, 0);
-		else
+		else {
+			if (buf != tmp)
+				free(buf);
 			return lsocket_error(L, strerror(errno));
+		}
 	} else if (nrd == 0)
 		lua_pushnil(L);
 	else {
 		lua_pushlstring(L, buf, nrd);
-		free(buf);
 	}
+	if (buf != tmp)
+		free(buf);
 	return 1;
 }
 
@@ -928,19 +934,25 @@ static int lsocket_sock_recvfrom(lua_State *L)
 	char sabuf[SOCKADDR_BUFSIZ];
 	struct sockaddr *sa = (struct sockaddr*) sabuf;
 	socklen_t slen = sizeof(sabuf);
-	char *buf = malloc(howmuch);
+	char tmp[READER_BUFSIZ];
+	char *buf = tmp;
+	if (howmuch > READER_BUFSIZ)
+		buf = malloc(howmuch);
 	int nrd = recvfrom(sock->sockfd, buf, howmuch, 0, sa, &slen);
 	if (nrd < 0) {
-		free(buf);
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			lua_pushboolean(L, 0);
-		else
+		else {
+			if (buf != tmp)
+				free(buf);
 			return lsocket_error(L, strerror(errno));
+		}
 	} else if (nrd == 0)
 		lua_pushnil(L); /* not possible for udp, so should not get here */
 	else {
 		lua_pushlstring(L, buf, nrd);
-		free(buf);
+		if (buf != tmp)
+			free(buf);
 		char ipbuf[SOCKADDR_BUFSIZ];
 		const char *s = _addr2string(sa, slen, ipbuf, SOCKADDR_BUFSIZ);
 		if (s)
@@ -950,6 +962,8 @@ static int lsocket_sock_recvfrom(lua_State *L)
 		lua_pushinteger(L, _portnumber(sa));
 		return 3;
 	}
+	if (buf != tmp)
+		free(buf);
 	return 1;
 }
 
