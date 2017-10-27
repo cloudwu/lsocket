@@ -1,6 +1,7 @@
 #ifndef WINDOWS_COMPAT_H
 #define WINDOWS_COMPAT_H
 
+#include <winsock2.h>
 #include <windows.h>
 #if _WIN32_WINNT < 0x0502
 #undef _WIN32_WINNT
@@ -8,7 +9,6 @@
 #endif
 
 
-#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdint.h>
 #include <lua.h>
@@ -33,13 +33,13 @@
 
 #endif
 
-int win_getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen);
-int win_setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+int win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen);
+int win_setsockopt(SOCKET sockfd, int level, int optname, const void *optval, socklen_t optlen);
 
 // only support fcntl(fd, F_SETFL, O_NONBLOCK)
 #define F_SETFL 0
 #define O_NONBLOCK 0
-int fcntl(int fd, int cmd, int value);
+int fcntl(SOCKET fd, int cmd, int value);
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 
 typedef u_short sa_family_t;

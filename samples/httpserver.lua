@@ -2,8 +2,8 @@
 -- this is extremely simple, just echoes back the request headers and
 -- request details
 --
--- Gunnar Zötl <gz@tset.de>, 2013-03
--- Released under MIT/X11 license. See file LICENSE for details.
+-- Gunnar Zötl <gz@tset.de>, 2013-2015
+-- Released under the terms of the MIT license. See file LICENSE for details.
 
 httpd = require "rshttpd"
 
@@ -34,6 +34,7 @@ server:addhandler("post", function(rq, header, data)
 		"<h2>Request</h2>",
 		tablify(rq),
 		"<b>data:</b><br>", data, "<br>",
+		"<br>" .. _VERSION .. "<br>",
 		"</pre></body></html>"}
 	return "200", res, { ["X-MyCustomHeader"] = "MyValue" }
 end)
@@ -51,6 +52,7 @@ server:addhandler("get", function(rq, header)
 			"<h2>Request</h2>",
 			tablify(rq)}
 	end
+	res = res .. "<br>" .. _VERSION .. "<br>"
 	res = res .. "</pre></body></html>"
 	return "200", res, { ["X-MyCustomHeader"] = "MyValue" }
 end)

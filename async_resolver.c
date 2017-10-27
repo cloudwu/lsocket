@@ -3,8 +3,8 @@
  * provide asynchronous dns lookup support. This is a companion lib to
  * lsocket, but can also be used without it.
  *
- * Gunnar Zötl <gz@tset.de>, 2013
- * Released under MIT/X11 license. See file LICENSE for details.
+ * Gunnar Zötl <gz@tset.de>, 2013-2015
+ * Released under the terms of the MIT license. See file LICENSE for details.
  */
 
 #include <sys/types.h>
@@ -111,11 +111,7 @@ static int ares__gc(lua_State *L)
 static int ares__toString(lua_State *L)
 {
 	aResolver *ares = ares_checkaResolver(L, 1);
-	char buf[TOSTRING_BUFSIZ];
-	if (snprintf(buf, TOSTRING_BUFSIZ, "%s: %p", ARESOLVER, ares) >= TOSTRING_BUFSIZ)
-		return luaL_error(L, "Whoopsie... the string representation seems to be too long.");
-		/* this should not happen, just to be sure! */
-	lua_pushstring(L, buf);
+	lua_pushfstring(L, "%s: %p", ARESOLVER, ares);
 	return 1;
 }
 

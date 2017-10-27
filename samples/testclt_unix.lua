@@ -3,8 +3,8 @@
 -- Demonstrates how to set up a unix domain client socket and communicate
 -- through it, and how to determine whether the server has terminated.
 --
--- Gunnar Zötl <gz@tset.de>, 2013-03
--- Do what you will with this.
+-- Gunnar Zötl <gz@tset.de>, 2013-2015
+-- Released under the terms of the MIT license. See file LICENSE for details.
 
 addr = "./testsocket"
 

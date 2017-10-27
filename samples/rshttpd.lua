@@ -2,13 +2,13 @@
 
 	An example for lsocket
 
-	Gunnar Zötl <gz@tset.de>, 2013-03
-	Released under MIT/X11 license. See file LICENSE for details.
+	Gunnar Zötl <gz@tset.de>, 2013-2015
+	Released under the terms of the MIT license. See file LICENSE for details.
 
 	use:
-
+	
 	httpd = require "rshttpd"
-
+	
 	-- create server
 	server = httpd.new([addr], port, [ [backlog], logfn])
 
@@ -51,7 +51,7 @@
 
 	-- request a status
 	status = server:status()
-
+	
 	- server:status returns a table with these fields:
 		- methods		supported methods
 		- rqlen			number of sockets waiting to read data
@@ -60,7 +60,7 @@
 		- up_since		date and time when the server has been started
 
 	-- handling keepalive connections
-
+	
 	Connections are persistent (keep-alive) if requested by the client or
 	if the http version is 1.1 or more and the client does not forbid them
 	by requesting Connection: Close. The life time of a keepalive connection
@@ -69,7 +69,7 @@
 	server.keepalive to false.
 
 	-- Notes:
-
+	
 	As reads and writes in lsocket are non-blocking, and the data may not
 	be sent or received in one go from / to the socket, we set up the handlers
 	for the connections as coroutines. Whenever a handling process wants
@@ -166,7 +166,7 @@ end
 -- insert socket into appropriate table and then return to main loop.
 -- It will resume here when the socket becomes ready for the operation
 -- we want to perform
-function waitfor(self, what, sock)
+local function waitfor(self, what, sock)
 	local tbl = self[what]
 	local tid = add_to_queue(tbl, sock)
 	self.requests[sock] = coroutine.running()
@@ -207,7 +207,7 @@ local function urlencode(str)
 			function (c) return format ("%%%02X", byte(c)) end)
 		str = gsub (str, " ", "+")
 	end
-	return str
+	return str	
 end
 
 -- helper for the read_request function: ensure that there is an entire
@@ -234,14 +234,14 @@ local function read_request(self, sock)
 
 	-- read request line
 	local b, e, ln, rq = next_line(self, sock, "", pos)
-	method, url, httpver = match(ln, "^(%a+)%s+([^%s]+)%s+HTTP/([%d%.]+)$")
+	method, url, httpver = match(ln, "^(%a+)%s+([^%s]+)%s+HTTP/([%d.]+)$")
 	if not method then return error("can't find request line") end
 	if find(url, "?", 1, true) then
 		path, args = match(url, "^([^?]+)%?(.+)$")
 	else
 		path = url
 	end
-
+	
 	request = {
 		method = lower(method),
 		url = url,
@@ -293,12 +293,12 @@ local function process_request(self, sock)
 		if rq.method ~= nil and self.process[lower(rq.method)] ~= nil then
 			ok, status, res, hdr = pcall(self.process[lower(rq.method)], rq, headers, body)
 		end
-
+		
 		if self.keepalive and (conn == 'keep-alive' or
 			(rq.httpver >= 1.1 and conn ~= 'close')) then
 			keepalive = true
 		end
-
+		
 		-- check return status
 		if ok then
 			res = res or "(no data)"
@@ -341,7 +341,7 @@ local function process_request(self, sock)
 	repeat
 		sent = sent + send_data(self, sock, sub(answer, sent + 1, -1))
 	until sent == tosend
-
+	
 	if keepalive then
 		self.stillalive[sock] = time() + self.keepalive
 		add_to_queue(self.rsocks, sock)
@@ -349,7 +349,7 @@ local function process_request(self, sock)
 		sock:close()
 	end
 	self.nreqs = self.nreqs + 1
-
+	
 	return true
 end
 
@@ -391,7 +391,7 @@ function httpd.new(addr, port, backlog, logfn)
 	backlog = backlog or 10
 
 	local self = setmetatable({}, {__index = httpd_methods})
-
+	
 	self.socket, emsg = ls.bind(addr, port, backlog)
 	if not self.socket then
 		error(emsg)
@@ -466,20 +466,20 @@ function httpd_methods:step(tmout)
 			elseif self.stillalive[s] then
 				self.stillalive[s] = nil
 				remove_from_queue(self.rsocks, s)
-				begin_request(self, s)
-			else
+				begin_request(self, s
+)			else
 				continue_request(self, s)
 			end
 		end
 	end
-
+	
 	-- handle sockets from write queue: these can only be running requests
 	if rw then
 		for _, s in ipairs(rw) do
 			continue_request(self, s)
 		end
 	end
-
+	
 	-- clean up timed out keepalive connections
 	local tm = time()
 	for s, t in pairs(self.stillalive) do
@@ -488,7 +488,7 @@ function httpd_methods:step(tmout)
 			s:close()
 		end
 	end
-
+	
 	return not not rr
 end
 

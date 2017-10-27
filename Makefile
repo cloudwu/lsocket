@@ -1,4 +1,11 @@
 # lsocket Makefile, works on Linux and Mac OS X, everywhere else roll your own.
+#
+# Gunnar Zötl <gz@tset.de>, 2013-2015.
+# Released under the terms of the MIT license. See file LICENSE for details.
+
+# swap the comments on the next 2 lines if you want the async resolver to be built and installed also
+ALL=lsocket.so
+#ALL=lsocket.so async_resolver.so
 
 ifdef DEBUG
 	DBG=-g
@@ -10,45 +17,35 @@ endif
 
 OS = $(shell uname -s)
 
+CC=gcc
+CFLAGS=-Wall -fPIC $(OPT) $(DBG)
+
 # if this does not work, just set it to your version number
 LUA_VERSION=$(shell lua -e "print((string.gsub(_VERSION, '^.+ ', '')))")
-
 LUA_DIR = /usr/local
-LUA_LIBDIR=$(LUA_DIR)/lib/lua/$(LUA_VERSION)
-LUA_SHAREDIR=$(LUA_DIR)/share/lua/$(LUA_VERSION)
-LUA_INCLUDE=$(LUA_DIR)/include
+LUA_INCDIR=$(LUA_DIR)/include
+INST_LIBDIR=$(LUA_DIR)/lib/lua/$(LUA_VERSION)
 
-ifndef LIBFLAG
-	ifeq ($(OS),Darwin)
-		LIBFLAG=-bundle -undefined dynamic_lookup -all_load
-	else
-		LIBFLAG=-shared
-	endif
+ifeq ($(OS),Darwin)
+LIBFLAG=-bundle -undefined dynamic_lookup -all_load
+else
+LIBFLAG=-shared
 endif
 
 ifndef PTHRFLAG
-	PTHRFLAG=-pthread
+PTHRFLAG=-pthread
 endif
 
-ifndef CC
-	CC=gcc
-endif
-
-CFLAGS=-Wall -fPIC $(OPT) $(DBG)
-INCDIRS=-I$(LUA_INCLUDE)
+INCDIRS=-I$(LUA_INCDIR)
 LDFLAGS=$(LIBFLAG) $(DBG)
 
-all: lsocket.so
+all: $(ALL)
 
 debug:; make DEBUG=1
 
 install:	all
-	mkdir -p $(LUA_LIBDIR)
-	cp lsocket.so $(LUA_LIBDIR)
-
-install-aresolver:	async_resolver.so
-	mkdir -p $(LUA_LIBDIR)
-	cp async_resolver.so $(LUA_LIBDIR)
+	mkdir -p $(INST_LIBDIR)
+	cp $(ALL) $(INST_LIBDIR)
 
 lsocket.so: lsocket.o
 	$(CC) $(LDFLAGS) -o $@ $<
@@ -56,14 +53,10 @@ lsocket.so: lsocket.o
 async_resolver.so: async_resolver.o gai_async.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(PTHRFLAG)
 
-lsocket.o: lsocket.c
+%.o: %.c
 	$(CC) $(CFLAGS) $(INCDIRS) -c $< -o $@
 
-async_resolver.o: async_resolver.c gai_async.h
-	$(CC) $(CFLAGS) $(INCDIRS) -c $< -o $@
-
-gai_async.o: gai_async.c gai_async.h
-	$(CC) $(CFLAGS) $(INCDIRS) -c $< -o $@ $(PTHRFLAG)
+async_resolver.o gai_async.o: gai_async.h
 
 clean:
 	find . -name "*~" -exec rm {} \;

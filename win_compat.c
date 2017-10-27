@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 int 
-win_getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen) {
+win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen) {
 	if (optname == SO_NOSIGPIPE) {
 		// ignore
 		return 0;
@@ -22,7 +22,7 @@ win_getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optl
 }
 
 int 
-win_setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) {
+win_setsockopt(SOCKET sockfd, int level, int optname, const void *optval, socklen_t optlen) {
 	if (optname == SO_NOSIGPIPE) {
 		// ignore
 		return 0;
@@ -36,7 +36,7 @@ win_setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t
 }
 
 int
-fcntl(int fd, int cmd, int value) {
+fcntl(SOCKET fd, int cmd, int value) {
 	unsigned long on = 1;
 	return ioctlsocket(fd, FIONBIO, &on);
 }

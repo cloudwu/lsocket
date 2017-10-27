@@ -2,8 +2,8 @@
 -- Demonstrates how to set up a udp server socket, how to accept connections,
 -- and how to maintain multiple connections in parallel.
 --
--- Gunnar Zötl <gz@tset.de>, 2013-03
--- Do what you will with this.
+-- Gunnar Zötl <gz@tset.de>, 2013-2015
+-- Released under the terms of the MIT license. See file LICENSE for details.
 
 if arg[1] == '6' then
 	addr = '::1'
