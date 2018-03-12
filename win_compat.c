@@ -1,6 +1,6 @@
 #define WIN_COMPAT_IMPL
 #include "win_compat.h"
-#include "Iphlpapi.h"
+#include "iphlpapi.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
