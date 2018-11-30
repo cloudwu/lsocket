@@ -5,15 +5,36 @@
  * Gunnar Zötl <gz@tset.de>, 2013-2015
  * Released under the terms of the MIT license. See file LICENSE for details.
  */
-
+#define LUA_LIB
 #include <stdlib.h>
+#if _WINDOWS && _MSC_VER > 0
+#include <io.h>
+
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+
+#else
 #include <unistd.h>
+#endif // _WINDOWS && _MSC_VER > 0
+
 #include <stdio.h>
 #include <fcntl.h>
+
 #include <string.h>
+#include "lua.h"
+#include "lauxlib.h"
 
 #if (defined _WIN32 ) || (defined _WIN64)
 #include "win_compat.h"
+
+// winsock do not need check select fd
+static void
+check_select_fd(lua_State *L, int fd, int index) {
+	if (index >= FD_SETSIZE) {
+		luaL_error(L, "bad argument to 'select' (socket file descriptor too many)");
+	}
+}
+
 #else
 #define SOCKET int
 
@@ -33,6 +54,13 @@
 
 #define init_socketlib(L)
 
+static void
+check_select_fd(lua_State *L, int fd, int index) {
+	if (fd >= FD_SETSIZE) {
+		luaL_error(L, "bad argument to 'select' (socket file descriptor too big)");
+	}
+}
+
 #endif
 
 #ifndef IPV6_ADD_MEMBERSHIP
@@ -48,9 +76,6 @@
 #ifdef __linux__
 	#define HAVE_ABSTRACT_UDSOCKETS
 #endif
-
-#include "lua.h"
-#include "lauxlib.h"
 
 #define LSOCKET_VERSION "1.4.1"
 
@@ -585,9 +610,15 @@ static int lsocket_connect(lua_State *L)
 		if (ok < 0)
 			return lsocket_error(L, strerror(errno));
 	}
-	
-	if (connect(sock->sockfd, sa, slen) < 0 && errno != EINPROGRESS)
-		return lsocket_error(L, strerror(errno));
+	if (connect(sock->sockfd, sa, slen) < 0) {
+#if defined(WIN32)
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+#else
+		if (errno != EINPROGRESS) {
+#endif
+			return lsocket_error(L, strerror(errno));
+		}
+	}
 
 	return 1;
 }
@@ -1180,10 +1211,7 @@ static int _table2fd_set(lua_State *L, int idx, fd_set *s)
 	lua_rawgeti(L, idx, i++);
 	while (lsocket_islSocket(L, -1)) {
 		lSocket *sock = lsocket_checklSocket(L, -1);
-		if (sock->sockfd > FD_SETSIZE) {
-			lua_pop(L, 1);
-			return luaL_error(L, "bad argument to 'select' (socket file descriptor too big)");
-		}
+		check_select_fd(L, sock->sockfd, i-1);
 		if (sock->sockfd >= 0) {
 			FD_SET(sock->sockfd, s);
 			if (sock->sockfd > maxfd) maxfd = sock->sockfd;
@@ -1489,7 +1517,8 @@ static int lsocket_ignore(lua_State *L)
  * 
  * open and initialize this library
  */
-int luaopen_lsocket(lua_State *L)
+LUAMOD_API int 
+luaopen_lsocket(lua_State *L)
 {
 	init_socketlib(L);
 	luaL_newlib(L, lsocket);
